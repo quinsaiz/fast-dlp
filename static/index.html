@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fast-dlp - YouTube Downloader</title>
+    <link rel="stylesheet" href="/static/index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <h1>fast-dlp</h1>
+      </div>
+
+      <div class="card">
+        <button class="back-btn hidden" id="backBtn" aria-label="Back">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div id="entryState">
+          <div class="input-group">
+            <input
+              type="text"
+              id="urlInput"
+              placeholder="Paste YouTube URL here..."
+              autocomplete="off"
+            />
+          </div>
+          <div id="errorMessage" class="error-message"></div>
+          <button class="btn" id="analyzeBtn">Download</button>
+        </div>
+
+        <div id="loadingState" class="loading">
+          <div class="spinner"></div>
+          <p>Analyzing media...</p>
+        </div>
+
+        <div id="mediaInfo" class="media-info">
+          <div class="thumbnail-wrapper">
+            <img id="thumbnail" src="" alt="Video thumbnail" />
+          </div>
+          <h2 class="video-title" id="videoTitle"></h2>
+          <p class="video-author" id="videoAuthor"></p>
+
+          <div class="control-group" id="mediaTypeGroup">
+            <label class="control-label">Media Type</label>
+            <div class="toggle-buttons">
+              <button class="toggle-btn active" data-type="video">Video</button>
+              <button class="toggle-btn" data-type="audio">Audio</button>
+            </div>
+          </div>
+
+          <div id="videoControls">
+            <div class="control-group">
+              <label class="control-label">Format</label>
+              <div class="toggle-buttons">
+                <button class="toggle-btn active" data-codec="mp4">MP4</button>
+                <button class="toggle-btn" data-codec="webm">WebM</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Quality</label>
+              <div class="toggle-buttons" id="qualityButtons">
+                <button class="toggle-btn" data-quality="1080">1080p</button>
+                <button class="toggle-btn" data-quality="720">720p</button>
+                <button class="toggle-btn" data-quality="480">480p</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="audioControls" class="hidden">
+            <div class="control-group">
+              <label class="control-label">Format</label>
+              <div class="toggle-buttons">
+                <button class="toggle-btn active" data-audio-format="mp3">
+                  MP3
+                </button>
+                <button class="toggle-btn" data-audio-format="m4a">M4A</button>
+                <button class="toggle-btn" data-audio-format="opus">
+                  Opus
+                </button>
+                <button class="toggle-btn" data-audio-format="wav">WAV</button>
+              </div>
+            </div>
+
+            <div class="control-group" id="bitrateGroup">
+              <label class="control-label">Bitrate</label>
+              <div class="toggle-buttons">
+                <button class="toggle-btn" data-bitrate="320">320</button>
+                <button class="toggle-btn active" data-bitrate="256">
+                  256
+                </button>
+                <button class="toggle-btn" data-bitrate="128">128</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="downloadProgress" class="hidden">
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <p style="text-align: center; color: #a1a1aa; margin-bottom: 20px">
+              Processing download...
+            </p>
+          </div>
+
+          <button class="btn" id="downloadBtn">Download Now</button>
+        </div>
+
+        <div id="successMessage" class="success-message">
+          <div class="success-icon">✓</div>
+          <p class="success-text">Download started successfully!</p>
+        </div>
+      </div>
+
+      <div class="how-it-works" id="howItWorks">
+        <h3>How it works</h3>
+        <p>
+          Paste any YouTube URL, analyze the video, select your preferred
+          quality and format, then download instantly. Fast, simple, and free.
+        </p>
+      </div>
+    </div>
+
+    <script src="/static/index.js"></script>
+  </body>
+</html>
