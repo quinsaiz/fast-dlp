@@ -6,6 +6,7 @@ def get_downloads_dir() -> str:
     path = os.path.join(os.path.dirname(__file__), "..", "downloads")
     if not os.path.exists(path):
         os.makedirs(path)
+
     return path
 
 
