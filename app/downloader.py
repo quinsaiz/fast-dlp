@@ -15,6 +15,9 @@ def get_link_info(url: str) -> dict:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
+        "extract_flat": "in_playlist",
+        "skip_download": True,
+        "socket_timeout": 10,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore
@@ -43,13 +46,13 @@ def get_link_info(url: str) -> dict:
 
 
 def download_media(
-    url: str,
-    media_type: str = "video",
-    video_codec: str = "mp4",
-    quality: str = "1080",
-    audio_codec: str = "mp3",
-    bitrate: str = "256",
-    request_id: str = "",
+        url: str,
+        media_type: str = "video",
+        video_codec: str = "mp4",
+        quality: str = "1080",
+        audio_codec: str = "mp3",
+        bitrate: str = "256",
+        request_id: str = "",
 ) -> dict:
     downloads_dir = get_downloads_dir()
     prefix = f"{request_id}_" if request_id else ""
@@ -59,6 +62,7 @@ def download_media(
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
+        "socket_timeout": 15,
         "outtmpl": os.path.join(downloads_dir, filename_format),
     }
 

@@ -17,8 +17,10 @@ from pydantic import BaseModel, HttpUrl
 
 from app.downloader import get_link_info, download_media
 
-
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:     %(name)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 static_path = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -35,9 +37,9 @@ class CleanupFileResponse(FileResponse):
         if os.path.exists(self.path):
             try:
                 os.remove(self.path)
-                logging.info(f"Successfully removed temporary file: {self.path}")
+                logger.info(f"Successfully removed temporary file: {self.path}")
             except Exception as e:
-                logging.error(f"Error removing file {self.path}: {e}")
+                logger.error(f"Error removing file {self.path}: {e}")
 
 
 def clean_old_downloads(directory: str, max_age_seconds: int = 3600):
@@ -77,7 +79,7 @@ class DownloadRequest(InfoRequest):
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     logger.info("Application starting: Cleaning downloads...")
     clean_old_downloads(downloads_path, max_age_seconds=0)
     yield
@@ -94,7 +96,6 @@ app.add_middleware(
     expose_headers=["X-File-Name"],
 )
 
-
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 
@@ -108,18 +109,22 @@ async def read_index():
 @app.post("/info")
 async def link_info(item: InfoRequest, background_tasks: BackgroundTasks) -> dict:
     background_tasks.add_task(clean_old_downloads, downloads_path)
+    url = prepare_url(item.url)
+
+    if "/search" in url.lower():
+        raise HTTPException(status_code=400,
+                            detail="Search links are not supported. Copy the link of a specific video.")
 
     try:
-        url = prepare_url(item.url)
         return await run_in_threadpool(get_link_info, url)
     except Exception as e:
         error_str = str(e)
         logger.error(f"Info Error: {error_str}")
 
-        if "Name or service not known" in error_str:
-            message = "The provided URL is invalid or the website is unreachable."
-        elif "Unsupported URL" in error_str:
-            message = "This website is not supported."
+        if "playlist" in error_str.lower():
+            message = "Playlists are not supported. Please provide a link to a single video."
+        elif "Name or service not known" in error_str:
+            message = "The provided URL is invalid or unreachable."
         else:
             message = "Could not retrieve video information. Please check the link."
 
@@ -172,12 +177,19 @@ async def download_endpoint(item: DownloadRequest) -> Any:
         error_str = str(e)
         logger.error(f"Download Error: {error_str}")
 
-        error_msg = "Download failed."
-        if "Video unavailable" in error_str:
+        url_str = prepare_url(item.url).lower()
+
+        if "search" in url_str:
+            error_msg = "Search links are not supported. Copy the link of a specific video."
+        elif "playlist" in error_str.lower():
+            error_msg = "This is a playlist. Please provide a link to a single video."
+        elif "video unavailable" in error_str.lower():
             error_msg = "Video is unavailable or deleted."
-        elif "Private video" in error_str:
+        elif "private video" in error_str.lower():
             error_msg = "This video is private."
-        elif "Unsupported URL" in error_str:
+        elif "unsupported url" in error_str.lower():
             error_msg = "This website is not supported."
+        else:
+            error_msg = "Download failed."
 
         raise HTTPException(status_code=400, detail=error_msg)
