@@ -262,11 +262,11 @@ async function downloadMedia() {
         console.error("Error decoding X-File-Name:", e);
       }
     } else {
-        const contentDisposition = response.headers.get("content-disposition");
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename\*=UTF-8''([^;%\n]*)/);
-            if (match) filename = decodeURIComponent(match[1]);
-        }
+      const contentDisposition = response.headers.get("content-disposition");
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename\*=UTF-8''([^;%\n]*)/);
+        if (match) filename = decodeURIComponent(match[1]);
+      }
     }
 
     const url = window.URL.createObjectURL(blob);

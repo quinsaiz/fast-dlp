@@ -26,10 +26,10 @@ def get_link_info(url: str) -> dict:
         allowed_heights = {1080, 720, 480}
         formats = info.get("formats") or []
         available_qualities = set()
-        for f in formats:
-            h = f.get("height")
-            if h in allowed_heights:
-                available_qualities.add(h)
+        for format in formats:
+            height = format.get("height")
+            if height in allowed_heights:
+                available_qualities.add(height)
 
         sorted_qualities = sorted(list(available_qualities), reverse=True)
 
