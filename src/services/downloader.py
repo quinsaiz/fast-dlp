@@ -1,13 +1,10 @@
 import os
 import yt_dlp
+from src.config import DOWNLOADS_DIR
 
 
 def get_downloads_dir() -> str:
-    path = os.path.join(os.path.dirname(__file__), "..", "downloads")
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    return path
+    return str(DOWNLOADS_DIR)
 
 
 def get_link_info(url: str) -> dict:
@@ -26,10 +23,10 @@ def get_link_info(url: str) -> dict:
         allowed_heights = {1080, 720, 480}
         formats = info.get("formats") or []
         available_qualities = set()
-        for format in formats:
-            height = format.get("height")
-            if height in allowed_heights:
-                available_qualities.add(height)
+        for f in formats:
+            h = f.get("height")
+            if h in allowed_heights:
+                available_qualities.add(h)
 
         sorted_qualities = sorted(list(available_qualities), reverse=True)
 

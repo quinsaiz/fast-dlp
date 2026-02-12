@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     unzip \
@@ -16,10 +16,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade yt-dlp yt-dlp-ejs
 
-COPY . .
+COPY src ./src
+COPY static ./static
+COPY entrypoint.sh .
 
-RUN mkdir -p downloads && chmod 777 downloads
+RUN mkdir -p /app/downloads && chmod +x /app/entrypoint.sh
+
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["./entrypoint.sh"]

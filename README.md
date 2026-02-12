@@ -44,7 +44,7 @@ A lightweight, asynchronous web application for analyzing and downloading YouTub
 
 4. Run the application:
     ```bash
-    uvicorn app.main:app --reload
+    uvicorn src.main:src --reload
     ```
 
 ### Docker Deployment (Recommended)
@@ -59,7 +59,7 @@ For a simplified setup that includes all system dependencies like FFmpeg automat
 ## Project Structure
 ```bash
 fast-dlp/
-├── app/
+├── src/
 │   ├── downloader.py  # Media extraction logic using yt-dlp
 │   └── main.py        # FastAPI routes and middleware
 ├── static/

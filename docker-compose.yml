@@ -1,10 +1,13 @@
 services:
-  web:
+  backend:
     build: .
+    container_name: fast-dlp
     ports:
       - "8000:8000"
-    restart: always
     volumes:
+      - ./src:/app/src
+      - ./static:/app/static
       - ./downloads:/app/downloads
     environment:
       - PYTHONUNBUFFERED=1
+    entrypoint: [ "./entrypoint.sh" ]
