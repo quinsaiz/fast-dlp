@@ -6,14 +6,14 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.concurrency import run_in_threadpool
 
-from src.config import DOWNLOADS_DIR
+from src.config import DOWNLOADS_DIR, MAX_FILE_AGE_SECONDS
 from src.services.downloader import get_link_info, download_media
 from src.schemas.media import InfoRequest, DownloadRequest
 from src.utils.helpers import (
     CleanupFileResponse,
     clean_old_downloads,
     clean_text,
-    prepare_url
+    prepare_url,
 )
 
 logger = logging.getLogger(__name__)
@@ -22,13 +22,15 @@ router = APIRouter()
 
 @router.post("/info")
 async def link_info(item: InfoRequest, background_tasks: BackgroundTasks) -> dict:
-    background_tasks.add_task(clean_old_downloads, str(DOWNLOADS_DIR))
+    background_tasks.add_task(
+        clean_old_downloads, str(DOWNLOADS_DIR), MAX_FILE_AGE_SECONDS
+    )
     url = prepare_url(str(item.url))
 
     if "/search" in url.lower():
         raise HTTPException(
             status_code=400,
-            detail="Search links are not supported. Copy the link of a specific video."
+            detail="Search links are not supported. Copy the link of a specific video.",
         )
 
     try:
@@ -38,7 +40,9 @@ async def link_info(item: InfoRequest, background_tasks: BackgroundTasks) -> dic
         logger.error(f"Info Error: {error_str}")
 
         if "playlist" in error_str.lower():
-            message = "Playlists are not supported. Please provide a link to a single video."
+            message = (
+                "Playlists are not supported. Please provide a link to a single video."
+            )
         elif "Name or service not known" in error_str:
             message = "The provided URL is invalid or unreachable."
         else:
@@ -96,7 +100,9 @@ async def download_endpoint(item: DownloadRequest) -> Any:
         url_str = prepare_url(str(item.url)).lower()
 
         if "search" in url_str:
-            error_msg = "Search links are not supported. Copy the link of a specific video."
+            error_msg = (
+                "Search links are not supported. Copy the link of a specific video."
+            )
         elif "playlist" in error_str.lower():
             error_msg = "This is a playlist. Please provide a link to a single video."
         elif "video unavailable" in error_str.lower():

@@ -5,9 +5,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./src:/app/src
-      - ./static:/app/static
-      - ./downloads:/app/downloads
+      - downloads:/app/downloads
     environment:
       - PYTHONUNBUFFERED=1
-    entrypoint: [ "./entrypoint.sh" ]
+    restart: unless-stopped
+
+volumes:
+  downloads:

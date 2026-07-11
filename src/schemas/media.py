@@ -1,8 +1,10 @@
 from typing import Literal
 from pydantic import BaseModel, HttpUrl
 
+
 class InfoRequest(BaseModel):
     url: HttpUrl
+
 
 class DownloadRequest(InfoRequest):
     media_type: Literal["video", "audio"] = "video"

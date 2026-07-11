@@ -1,5 +1,6 @@
 import os
 import yt_dlp
+
 from src.config import DOWNLOADS_DIR
 
 
@@ -20,7 +21,7 @@ def get_link_info(url: str) -> dict:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore
         info = ydl.extract_info(url, download=False)
 
-        allowed_heights = {1080, 720, 480}
+        allowed_heights = {1080, 720, 480, 360}
         formats = info.get("formats") or []
         available_qualities = set()
         for f in formats:
@@ -43,13 +44,13 @@ def get_link_info(url: str) -> dict:
 
 
 def download_media(
-        url: str,
-        media_type: str = "video",
-        video_codec: str = "mp4",
-        quality: str = "1080",
-        audio_codec: str = "mp3",
-        bitrate: str = "256",
-        request_id: str = "",
+    url: str,
+    media_type: str = "video",
+    video_codec: str = "mp4",
+    quality: str = "1080",
+    audio_codec: str = "mp3",
+    bitrate: str = "256",
+    request_id: str = "",
 ) -> dict:
     downloads_dir = get_downloads_dir()
     prefix = f"{request_id}_" if request_id else ""
@@ -65,16 +66,24 @@ def download_media(
 
     if media_type == "audio":
         extension = audio_codec
+        supports_thumbnail = audio_codec in ("mp3", "m4a", "opus")
+
+        postprocessors = [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": audio_codec,
+                "preferredquality": bitrate,
+            },
+            {"key": "FFmpegMetadata", "add_metadata": True},
+        ]
+        if supports_thumbnail:
+            postprocessors.append({"key": "EmbedThumbnail"})
+
         ydl_opts.update(
             {
                 "format": "bestaudio/best",
-                "postprocessors": [
-                    {
-                        "key": "FFmpegExtractAudio",
-                        "preferredcodec": audio_codec,
-                        "preferredquality": bitrate,
-                    }
-                ],
+                "writethumbnail": supports_thumbnail,
+                "postprocessors": postprocessors,
             }
         )
     else:
@@ -89,6 +98,9 @@ def download_media(
             {
                 "format": v_format,
                 "merge_output_format": extension,
+                "postprocessors": [
+                    {"key": "FFmpegMetadata", "add_metadata": True},
+                ],
             }
         )
 

@@ -140,8 +140,8 @@ async function analyzeVideo() {
   try {
     const response = await fetch("/info", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: url }),
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url: url}),
     });
 
     if (!response.ok) {
@@ -167,6 +167,14 @@ async function analyzeVideo() {
 }
 
 function displayMediaInfo(data) {
+  if (data.is_live) {
+    elements.loadingState.style.display = "none";
+    elements.entryState.classList.remove("hidden");
+    elements.howItWorks.classList.remove("hidden");
+    showError("Live broadcasts are not currently supported.");
+    return;
+  }
+
   elements.logo.classList.add("hidden-logo");
   elements.backBtn.classList.remove("hidden");
 
@@ -225,7 +233,7 @@ async function downloadMedia() {
   try {
     const response = await fetch("/download", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         url: state.url,
         media_type: state.mediaType,

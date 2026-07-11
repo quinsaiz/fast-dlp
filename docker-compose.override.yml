@@ -1,0 +1,8 @@
+services:
+  backend:
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./src:/app/src
+      - ./static:/app/static
+    environment:
+      - RELOAD=true

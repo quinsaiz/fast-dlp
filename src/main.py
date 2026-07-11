@@ -16,6 +16,7 @@ logger = setup_logger(__name__)
 async def lifespan(_: FastAPI):
     logger.info("Application starting: Cleaning downloads...")
     clean_old_downloads(str(DOWNLOADS_DIR), max_age_seconds=0)
+
     yield
 
 
@@ -24,7 +25,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-File-Name"],
@@ -32,9 +33,7 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-app.include_router(
-    media.router
-)
+app.include_router(media.router)
 
 
 @app.get("/")
