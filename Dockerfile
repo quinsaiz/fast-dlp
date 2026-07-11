@@ -30,7 +30,6 @@ RUN addgroup --gid 1000 appgroup && \
 COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH=/app
 
 COPY --chown=appuser:appgroup . .
 RUN chmod +x /app/entrypoint.sh && \
@@ -40,4 +39,8 @@ RUN chmod +x /app/entrypoint.sh && \
 USER appuser:appgroup
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=60s --timeout=3s --start-period=5s \
+  CMD curl -f http://localhost:8000/health || exit 1
+
 ENTRYPOINT ["./entrypoint.sh"]

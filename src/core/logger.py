@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-def setup_logger(name: str):
+def setup_logger(name: str) -> logging.Logger:
     root_logger = logging.getLogger()
 
     if not root_logger.handlers:

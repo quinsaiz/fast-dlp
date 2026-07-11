@@ -6,8 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.139.0",
+    "mutagen>=1.48.1",
     "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
     "python-multipart>=0.0.32",
+    "slowapi>=0.1.10",
     "uvicorn>=0.51.0",
     "yt-dlp>=2026.7.4",
     "yt-dlp-ejs>=0.8.0",
@@ -15,7 +18,49 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.5.0",
     "mypy>=2.2.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.15.21",
     "types-yt-dlp>=2026.3.17.20260605",
 ]
+
+# ---- Ruff ----
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "C90", # mccabe complexity
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking (TYPE_CHECKING blocks)
+    "ASYNC", # flake8-async
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long
+]
+unfixable = [
+    "F401", # unused imports
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+# ---- Mypy ----
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# ---- Pytest ----
+[tool.pytest.ini_options]
+pythonpath = ["."]

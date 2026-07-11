@@ -1,15 +1,26 @@
 import os
-import yt_dlp
+from typing import Any
 
-from src.config import DOWNLOADS_DIR
+import yt_dlp
+from yt_dlp.utils import DownloadError as YtDlpDownloadError
+
+from src.config import settings
+from src.core.exceptions import (
+    DownloadError,
+    LiveStreamNotSupportedError,
+    PlaylistNotSupportedError,
+    PrivateVideoError,
+    UnsupportedURLError,
+    VideoUnavailableError,
+)
 
 
 def get_downloads_dir() -> str:
-    return str(DOWNLOADS_DIR)
+    return str(settings.downloads_dir)
 
 
-def get_link_info(url: str) -> dict:
-    ydl_opts = {
+def get_link_info(url: str) -> dict[str, Any]:
+    ydl_opts: dict[str, Any] = {
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
@@ -19,7 +30,10 @@ def get_link_info(url: str) -> dict:
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore
-        info = ydl.extract_info(url, download=False)
+        try:
+            info = ydl.extract_info(url, download=False)
+        except YtDlpDownloadError as e:
+            raise _map_yt_dlp_error(str(e)) from e
 
         allowed_heights = {1080, 720, 480, 360}
         formats = info.get("formats") or []
@@ -51,12 +65,12 @@ def download_media(
     audio_codec: str = "mp3",
     bitrate: str = "256",
     request_id: str = "",
-) -> dict:
+) -> dict[str, Any]:
     downloads_dir = get_downloads_dir()
     prefix = f"{request_id}_" if request_id else ""
     filename_format = f"{prefix}%(title)s [%(id)s].%(ext)s"
 
-    ydl_opts = {
+    ydl_opts: dict[str, Any] = {
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
@@ -105,7 +119,14 @@ def download_media(
         )
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore
-        info = ydl.extract_info(url, download=True)
+        try:
+            info = ydl.extract_info(url, download=True)
+        except YtDlpDownloadError as e:
+            raise _map_yt_dlp_error(str(e)) from e
+
+        if info.get("is_live"):
+            raise LiveStreamNotSupportedError("Live streams are not supported")
+
         actual_path = ydl.prepare_filename(info)
 
         base_no_ext = os.path.splitext(actual_path)[0]
@@ -123,3 +144,16 @@ def download_media(
             full_title = title if title else "media"
 
         return {"path": actual_path, "title": full_title}
+
+
+def _map_yt_dlp_error(error_str: str) -> DownloadError:
+    lowered = error_str.lower()
+    if "playlist" in lowered:
+        return PlaylistNotSupportedError(error_str)
+    if "private video" in lowered:
+        return PrivateVideoError(error_str)
+    if "video unavailable" in lowered:
+        return VideoUnavailableError(error_str)
+    if "unsupported url" in lowered:
+        return UnsupportedURLError(error_str)
+    return DownloadError(error_str)

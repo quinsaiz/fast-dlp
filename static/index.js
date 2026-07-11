@@ -39,7 +39,7 @@ elements.downloadBtn.addEventListener("click", downloadMedia);
 elements.backBtn.addEventListener("click", reset);
 
 elements.urlInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") analyzeVideo();
+  if (e.key === "Enter") void analyzeVideo();
 });
 
 document.querySelectorAll("[data-type]").forEach((btn) => {
@@ -117,6 +117,32 @@ function toggleMediaControls() {
   }
 }
 
+/**
+ * @typedef {Object} ApiErrorDetailItem
+ * @property {string} msg
+ */
+
+/**
+ * @param {{detail?: string|ApiErrorDetailItem[]}} errorData
+ * @param {string} fallback
+ * @returns {string}
+ */
+function extractErrorMessage(errorData, fallback) {
+  if (typeof errorData?.detail === "string") {
+    return errorData.detail;
+  }
+  if (Array.isArray(errorData?.detail) && errorData.detail[0]?.msg) {
+    return errorData.detail[0].msg;
+  }
+  return fallback;
+}
+
+function resetToEntryState() {
+  elements.loadingState.style.display = "none";
+  elements.entryState.classList.remove("hidden");
+  elements.howItWorks.classList.remove("hidden");
+}
+
 async function analyzeVideo() {
   let url = elements.urlInput.value.trim();
 
@@ -137,33 +163,28 @@ async function analyzeVideo() {
   elements.loadingState.style.display = "block";
   elements.howItWorks.classList.add("hidden");
 
+  let response;
   try {
-    const response = await fetch("/info", {
+    response = await fetch("/info", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({url: url}),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      let errorMessage = "Failed to analyze video";
-
-      if (Array.isArray(errorData.detail)) {
-        errorMessage = errorData.detail[0].msg;
-      } else if (typeof errorData.detail === "string") {
-        errorMessage = errorData.detail;
-      }
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    displayMediaInfo(data);
   } catch (error) {
     showError(error.message);
-    elements.loadingState.style.display = "none";
-    elements.entryState.classList.remove("hidden");
-    elements.howItWorks.classList.remove("hidden");
+    resetToEntryState();
+    return;
   }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    showError(extractErrorMessage(errorData, "Failed to analyze video"));
+    resetToEntryState();
+    return;
+  }
+
+  const data = await response.json();
+  displayMediaInfo(data);
 }
 
 function displayMediaInfo(data) {
@@ -246,14 +267,12 @@ async function downloadMedia() {
 
     if (!response.ok) {
       const errorData = await response.json();
-      let errorMessage = "An error occurred";
-
-      if (typeof errorData.detail === "string") {
-        errorMessage = errorData.detail;
-      } else if (Array.isArray(errorData.detail)) {
-        errorMessage = errorData.detail[0].msg;
-      }
-      throw new Error(errorMessage);
+      const fallback =
+        response.status === 429
+          ? "Too many download requests. Please wait a moment and try again."
+          : "An error occurred";
+      showError(extractErrorMessage(errorData, fallback));
+      return;
     }
 
     const blob = await response.blob();
