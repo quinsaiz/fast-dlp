@@ -76,6 +76,11 @@ def download_media(
         "noplaylist": True,
         "socket_timeout": 15,
         "outtmpl": os.path.join(downloads_dir, filename_format),
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android"],
+            },
+        },
     }
 
     if media_type == "audio":
